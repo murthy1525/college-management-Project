@@ -1,5 +1,12 @@
 node_modules/
 dist/
+dist-ssr/
 .env
+.env.test
+.env.local
 *.log
 .DS_Store
+uploads-test/
+test-results/
+playwright-report/
+coverage/

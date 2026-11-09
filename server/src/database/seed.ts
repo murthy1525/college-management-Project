@@ -16,6 +16,7 @@ const ROLES = [
   { code: "hod", name: "Head of Department" },
   { code: "lecturer", name: "Lecturer" },
   { code: "student", name: "Student" },
+  { code: "parent", name: "Parent / Guardian" },
 ];
 
 const PERMISSIONS = [

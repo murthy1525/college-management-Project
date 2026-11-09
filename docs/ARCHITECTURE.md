@@ -45,6 +45,9 @@ backend authorization — never as separate deployable frontends.
 | `lecturers` | Registration, profile, qualifications, employment history |
 | `principals` | Principal/admin staff profiles, institutional responsibility records |
 | `departments` | Departments, courses, academic years, semesters, sections, subjects |
+| `guardians` | Parent/guardian records per student, optional parent portal login provisioning |
+| `progress-cards` | Per-term progress cards requiring both a staff and a parent signature before completion |
+| `me` | Self-service lookup for a parent ("my children") or student ("my profile") login |
 | `academics` | Enrollment, subject allocation, grading-rule configuration |
 | `attendance` | Student + lecturer attendance, correction workflow, aggregation |
 | `examinations` | Exam scheduling, marks entry, results, backlog, revaluation |
@@ -64,22 +67,33 @@ own `validators/` (Zod schemas shared with frontend where practical) and `tests/
 Permissions are enforced on the backend via RBAC middleware; frontend hiding of
 buttons is cosmetic only, never the actual gate.
 
-| Capability | Principal | Admin | HOD | Lecturer | Student |
-|---|---|---|---|---|---|
-| View college-wide dashboard/stats | ✅ | ✅ | Dept-scoped | ❌ | ❌ |
-| Create/edit department, course, academic year | View | ✅ | View | ❌ | ❌ |
-| Register / edit student | View | ✅ | Dept-scoped | ❌ | Own profile (contact fields only) |
-| Register / edit lecturer | View | ✅ | Dept view | Own profile (contact fields only) | ❌ |
-| Mark student attendance | ❌ | ❌ | Dept view | ✅ (own classes) | ❌ |
-| Approve attendance corrections | ❌ | ✅ | ✅ (dept) | ❌ (can request) | ❌ (can request) |
-| Enter internal exam marks | ❌ | ❌ | Dept view | ✅ (own subjects) | ❌ |
-| Publish results | ❌ | ✅ | ✅ (dept, with admin co-sign for backlog/reval) | ❌ | ❌ |
-| Create/manage timetable | ❌ | ✅ | ✅ (dept) | View own | View own |
-| Approve leave | ❌ | ✅ (staff) | ✅ (dept student/lecturer) | ❌ (can request own) | ❌ (can request own) |
-| Submit assignment | ❌ | ❌ | ❌ | Grade only | ✅ |
-| View audit logs | ✅ (summary) | ✅ (full) | Dept-scoped | ❌ | ❌ |
-| Global person search | ✅ | ✅ | Dept-scoped | Class-scoped | Self only |
-| View salary / HR data | ❌ | HR role only | ❌ | ❌ | ❌ |
+| Capability | Principal | Admin | HOD | Lecturer | Student | Parent |
+|---|---|---|---|---|---|---|
+| View college-wide dashboard/stats | ✅ | ✅ | Dept-scoped | ❌ | ❌ | ❌ |
+| Create/edit department, course, academic year | View | ✅ | View | ❌ | ❌ | ❌ |
+| Register / edit student | View | ✅ | Dept-scoped | ❌ | Own profile (contact fields only) | ❌ |
+| Register / edit lecturer | View | ✅ | Dept view | Own profile (contact fields only) | ❌ | ❌ |
+| View a student's full profile | ✅ | ✅ | Dept-scoped | Class-scoped | Self only | Own linked child(ren) only |
+| Mark student attendance | ❌ | ❌ | Dept view | ✅ (own classes) | ❌ | ❌ |
+| Approve attendance corrections | ❌ | ✅ | ✅ (dept) | ❌ (can request) | ❌ (can request) | ❌ |
+| Enter internal exam marks | ❌ | ❌ | Dept view | ✅ (own subjects) | ❌ | ❌ |
+| Publish results | ❌ | ✅ | ✅ (dept, with admin co-sign for backlog/reval) | ❌ | ❌ | ❌ |
+| Create/manage timetable | ❌ | ✅ | ✅ (dept) | View own | View own | ❌ |
+| Approve leave | ❌ | ✅ (staff) | ✅ (dept student/lecturer) | ❌ (can request own) | ❌ (can request own) | ❌ |
+| Submit assignment | ❌ | ❌ | ❌ | Grade only | ✅ | ❌ |
+| Create a progress card | ❌ | ✅ | ✅ | ✅ (own subject's students) | ❌ | ❌ |
+| Sign a progress card as staff | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Sign a progress card as parent | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ (own linked child only) |
+| Create a guardian's parent-portal login | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| View audit logs | ✅ (summary) | ✅ (full) | Dept-scoped | ❌ | ❌ | ❌ |
+| Global person search | ✅ | ✅ | Dept-scoped | Class-scoped | Self only | ❌ |
+| View salary / HR data | ❌ | HR role only | ❌ | ❌ | ❌ | ❌ |
+
+**Progress cards are intentionally dual-gated**: a card is "awaiting_signatures" until
+*both* an authorized staff member signs (as the teacher of record) *and* the student's
+linked parent/guardian signs — either order is allowed, but neither signature can be
+replaced once given, and a parent can only ever sign a card for their own linked
+child (enforced server-side against `student_guardians`, not just hidden in the UI).
 
 Implementation: a `permissions` table of fine-grained flags (`student.create`,
 `attendance.mark`, `marks.publish`, …) grouped into `roles`, joined via `user_roles`.

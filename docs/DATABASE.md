@@ -102,7 +102,15 @@ erDiagram
   `nationality`, `department_id` FK, `course_id` FK, `current_section_id` FK,
   `current_year_of_study`, `admission_date`, `previous_institution`,
   `previous_qualification`, `status` [applied/active/promoted/transferred/graduated/withdrawn/archived])
-- **student_guardians**(`id`, `student_id` FK, `relationship`, `name`, `contact_number`, `email`)
+- **student_guardians**(`id`, `student_id` FK, `relationship`, `name`, `contact_number`, `email`,
+  `user_id` FK users NULL) — `user_id` is set only when the guardian has been given a
+  parent-portal login; it drives which children a `parent`-role login can see.
+- **progress_cards**(`id`, `student_id` FK, `term`, `remarks`, `status`
+  [awaiting_signatures/fully_signed], `created_by` FK users, `teacher_signed_by` FK users NULL,
+  `teacher_signed_at` NULL, `parent_signed_by` FK users NULL, `parent_signed_at` NULL) —
+  `status` is server-computed from the two signature pairs, never client-supplied; each
+  signature can be set once and is never overwritten (a resign attempt is rejected, not
+  silently replaced).
 - **student_documents**(`id`, `student_id` FK, `doc_type`, `file_url`, `verified_status`, `uploaded_at`)
 - **student_academic_history**(`id`, `student_id` FK, `academic_year_id` FK,
   `department_id` FK, `course_id` FK, `section_id` FK, `year_of_study`, `event_type`
