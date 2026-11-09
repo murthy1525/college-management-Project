@@ -13,6 +13,7 @@ studentsRouter.get("/", asyncHandler(studentsController.list));
 studentsRouter.post("/", requireRole("admin", "hod"), asyncHandler(studentsController.create));
 
 studentsRouter.get("/:studentId", asyncHandler(studentsController.getOne));
+studentsRouter.get("/:studentId/attendance", asyncHandler(studentsController.getAttendance));
 studentsRouter.put("/:studentId", requireRole("admin", "hod"), asyncHandler(studentsController.update));
 studentsRouter.patch("/:studentId/status", requireRole("admin", "hod"), asyncHandler(studentsController.setStatus));
 studentsRouter.post("/:studentId/login", requireRole("admin", "hod"), asyncHandler(studentsController.createLogin));

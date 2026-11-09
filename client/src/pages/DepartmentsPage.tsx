@@ -2,6 +2,7 @@ import type { FormEvent } from "react";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, extractErrorMessage } from "../lib/api";
+import { useAuth } from "../auth/AuthContext";
 import { Button } from "../components/Button";
 import { StatusBadge } from "../components/StatusBadge";
 import { PageHeader } from "../components/PageHeader";
@@ -15,6 +16,8 @@ interface Department {
 }
 
 export function DepartmentsPage() {
+  const { hasRole } = useAuth();
+  const canManage = hasRole("admin");
   const queryClient = useQueryClient();
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -59,17 +62,19 @@ export function DepartmentsPage() {
     <div>
       <PageHeader title="Departments" subtitle="Academic departments offered by the college." />
 
-      <form onSubmit={handleCreate} className="flex gap-2 mb-4">
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="New department name"
-          className="border border-gray-300 rounded-md px-3 py-1.5 text-sm flex-1 max-w-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
-        />
-        <Button type="submit" isLoading={createMutation.isPending}>
-          Add Department
-        </Button>
-      </form>
+      {canManage && (
+        <form onSubmit={handleCreate} className="flex gap-2 mb-4">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="New department name"
+            className="border border-gray-300 rounded-md px-3 py-1.5 text-sm flex-1 max-w-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+          />
+          <Button type="submit" isLoading={createMutation.isPending}>
+            Add Department
+          </Button>
+        </form>
+      )}
       {error && <div className="mb-4 text-sm text-red-700">{error}</div>}
 
       <label className="flex items-center gap-2 text-sm text-gray-600 mb-3">
@@ -77,7 +82,7 @@ export function DepartmentsPage() {
         Show inactive departments
       </label>
 
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-gray-500 text-left">
             <tr>
@@ -102,13 +107,15 @@ export function DepartmentsPage() {
                   <StatusBadge isActive={dept.is_active} />
                 </td>
                 <td className="px-4 py-2 text-right">
-                  <Button
-                    variant={dept.is_active ? "secondary" : "primary"}
-                    onClick={() => statusMutation.mutate({ id: dept.id, isActive: !dept.is_active })}
-                    isLoading={statusMutation.isPending && statusMutation.variables?.id === dept.id}
-                  >
-                    {dept.is_active ? "Deactivate" : "Activate"}
-                  </Button>
+                  {canManage && (
+                    <Button
+                      variant={dept.is_active ? "secondary" : "primary"}
+                      onClick={() => statusMutation.mutate({ id: dept.id, isActive: !dept.is_active })}
+                      isLoading={statusMutation.isPending && statusMutation.variables?.id === dept.id}
+                    >
+                      {dept.is_active ? "Deactivate" : "Activate"}
+                    </Button>
+                  )}
                 </td>
               </tr>
             ))}

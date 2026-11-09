@@ -5,6 +5,7 @@ export interface AccessTokenPayload {
   userId: number;
   publicId: string;
   email: string;
+  fullName: string | null;
   roles: string[];
 }
 

@@ -19,7 +19,7 @@ export function StudentHomeRedirect() {
 
   if (!data || data.length === 0) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-6 text-sm text-gray-500">
+      <div className="bg-white border border-gray-100 shadow-sm rounded-xl p-6 text-sm text-gray-500">
         Your account isn't linked to a student record yet. Contact the school office.
       </div>
     );

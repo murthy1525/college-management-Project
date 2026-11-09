@@ -58,6 +58,18 @@ interface ProgressCard {
   parent_signed_by_email?: string;
 }
 
+interface AttendanceData {
+  records: { id: number; attendance_date: string; status: "present" | "absent" | "late" | "leave" }[];
+  summary: { present: number; absent: number; late: number; leave: number; percentage: number | null };
+}
+
+const ATTENDANCE_DOT: Record<string, string> = {
+  present: "bg-green-500",
+  absent: "bg-red-500",
+  late: "bg-amber-500",
+  leave: "bg-blue-500",
+};
+
 function ProfileSkeleton() {
   return (
     <div>
@@ -76,6 +88,10 @@ export function StudentDetailPage() {
   const { studentId } = useParams();
   const { hasRole } = useAuth();
   const isStaff = hasRole("admin", "hod", "lecturer", "principal");
+  // Viewing is open to any staff role, but writes (status, uploads, guardians)
+  // are only ever accepted by the backend from admin/hod — match that here so
+  // a lecturer never sees a button that will just 403.
+  const canManageStudent = hasRole("admin", "hod");
   const canManageCards = hasRole("admin", "hod", "lecturer");
   const isParentViewer = hasRole("parent");
 
@@ -107,6 +123,12 @@ export function StudentDetailPage() {
   const { data: progressCards, isLoading: cardsLoading } = useQuery({
     queryKey: ["progress-cards", studentId],
     queryFn: async () => (await api.get<{ data: ProgressCard[] }>(`/students/${studentId}/progress-cards`)).data.data,
+  });
+
+  const { data: attendance, isLoading: attendanceLoading } = useQuery({
+    queryKey: ["student-attendance", studentId],
+    queryFn: async () =>
+      (await api.get<{ data: AttendanceData }>(`/students/${studentId}/attendance`)).data.data,
   });
 
   const invalidateStudent = () => queryClient.invalidateQueries({ queryKey: ["student", studentId] });
@@ -260,7 +282,7 @@ export function StudentDetailPage() {
           actions={
             <>
               <StatusBadge isActive={student.is_active} />
-              {isStaff && (
+              {canManageStudent && (
                 <Button
                   variant={student.is_active ? "secondary" : "primary"}
                   isLoading={statusMutation.isPending}
@@ -275,7 +297,7 @@ export function StudentDetailPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <section className="bg-white border border-gray-200 rounded-lg p-4">
+        <section className="bg-white border border-gray-100 shadow-sm rounded-xl p-4">
           <h2 className="text-sm font-semibold text-gray-700 mb-3">Overview</h2>
           <dl className="text-sm grid grid-cols-2 gap-y-2">
             <dt className="text-gray-500">Department</dt>
@@ -293,7 +315,7 @@ export function StudentDetailPage() {
           </dl>
         </section>
 
-        <section className="bg-white border border-gray-200 rounded-lg p-4">
+        <section className="bg-white border border-gray-100 shadow-sm rounded-xl p-4">
           <h2 className="text-sm font-semibold text-gray-700 mb-3">Academic History</h2>
           {student.history.length === 0 && <div className="text-sm text-gray-400">No history yet.</div>}
           <ul className="text-sm space-y-2">
@@ -309,11 +331,59 @@ export function StudentDetailPage() {
         </section>
       </div>
 
+      {/* --- Attendance --- */}
+      <section className="bg-white border border-gray-100 shadow-sm rounded-xl p-4 mt-6">
+        <h2 className="text-sm font-semibold text-gray-700 mb-3">Attendance</h2>
+        {attendanceLoading && <Skeleton className="h-16" />}
+        {!attendanceLoading && attendance && (
+          <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+            <div className="shrink-0">
+              <div className="text-3xl font-semibold text-gray-900">
+                {attendance.summary.percentage === null ? "—" : `${attendance.summary.percentage}%`}
+              </div>
+              <div className="text-xs text-gray-400">last 90 days</div>
+            </div>
+            <div className="flex flex-wrap gap-4 text-xs text-gray-600">
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-green-500" /> Present {attendance.summary.present}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-red-500" /> Absent {attendance.summary.absent}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-amber-500" /> Late {attendance.summary.late}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-blue-500" /> Leave {attendance.summary.leave}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {!attendanceLoading && attendance && attendance.records.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-4">
+            {attendance.records
+              .slice(0, 30)
+              .reverse()
+              .map((r) => (
+                <span
+                  key={r.id}
+                  title={`${r.attendance_date}: ${r.status}`}
+                  className={`h-3 w-3 rounded-sm ${ATTENDANCE_DOT[r.status]}`}
+                />
+              ))}
+          </div>
+        )}
+        {!attendanceLoading && attendance?.records.length === 0 && (
+          <div className="text-sm text-gray-400 mt-2">No attendance recorded yet.</div>
+        )}
+      </section>
+
       {/* --- Guardians --- */}
-      <section className="bg-white border border-gray-200 rounded-lg p-4 mt-6">
+      <section className="bg-white border border-gray-100 shadow-sm rounded-xl p-4 mt-6">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold text-gray-700">Parents / Guardians</h2>
-          {isStaff && (
+          {canManageStudent && (
             <Button variant="secondary" onClick={() => setShowGuardianForm((s) => !s)}>
               {showGuardianForm ? "Cancel" : "Add Guardian"}
             </Button>
@@ -392,7 +462,7 @@ export function StudentDetailPage() {
       </section>
 
       {/* --- Progress Cards --- */}
-      <section className="bg-white border border-gray-200 rounded-lg p-4 mt-6">
+      <section className="bg-white border border-gray-100 shadow-sm rounded-xl p-4 mt-6">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold text-gray-700">Progress Cards</h2>
           {canManageCards && (
@@ -433,7 +503,12 @@ export function StudentDetailPage() {
 
         <ul className="space-y-3">
           {progressCards?.map((card) => (
-            <li key={card.id} className="border border-gray-100 rounded-md p-3">
+            <li
+              key={card.id}
+              className={`border border-gray-100 rounded-lg p-3 border-l-4 ${
+                card.status === "fully_signed" ? "border-l-green-500" : "border-l-amber-400"
+              }`}
+            >
               <div className="flex items-center justify-between mb-2">
                 <div className="font-medium text-sm text-gray-900">{card.term}</div>
                 <ProgressCardStatusBadge status={card.status} />
@@ -493,10 +568,10 @@ export function StudentDetailPage() {
       </section>
 
       {/* --- Documents --- */}
-      <section className="bg-white border border-gray-200 rounded-lg p-4 mt-6">
+      <section className="bg-white border border-gray-100 shadow-sm rounded-xl p-4 mt-6">
         <h2 className="text-sm font-semibold text-gray-700 mb-3">Documents</h2>
 
-        {isStaff && (
+        {canManageStudent && (
           <form onSubmit={handleUpload} className="flex flex-wrap gap-2 items-center mb-4">
             <input
               placeholder="Document type (e.g. transfer_certificate)"
@@ -531,7 +606,7 @@ export function StudentDetailPage() {
               </div>
               <div className="flex items-center gap-2">
                 <StatusBadge isActive={doc.is_active} />
-                {isStaff && (
+                {canManageStudent && (
                   <Button
                     variant={doc.is_active ? "secondary" : "primary"}
                     isLoading={docStatusMutation.isPending}

@@ -2,6 +2,7 @@ import type { FormEvent } from "react";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, extractErrorMessage } from "../lib/api";
+import { useAuth } from "../auth/AuthContext";
 import { Button } from "../components/Button";
 import { StatusBadge } from "../components/StatusBadge";
 import { PageHeader } from "../components/PageHeader";
@@ -23,6 +24,8 @@ interface Course {
 }
 
 export function CoursesPage() {
+  const { hasRole } = useAuth();
+  const canManage = hasRole("admin");
   const queryClient = useQueryClient();
   const [name, setName] = useState("");
   const [departmentId, setDepartmentId] = useState("");
@@ -84,40 +87,42 @@ export function CoursesPage() {
     <div>
       <PageHeader title="Courses" subtitle="Programs offered within each department." />
 
-      <form onSubmit={handleCreate} className="flex flex-wrap gap-2 mb-4 items-center">
-        <select
-          value={departmentId}
-          onChange={(e) => setDepartmentId(e.target.value)}
-          className="border border-gray-300 rounded-md px-3 py-1.5 text-sm"
-        >
-          <option value="">Select department</option>
-          {departments?.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.name}
-            </option>
-          ))}
-        </select>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Course name"
-          className="border border-gray-300 rounded-md px-3 py-1.5 text-sm flex-1 max-w-xs"
-        />
-        <input
-          type="number"
-          min={1}
-          max={10}
-          value={durationYears}
-          onChange={(e) => setDurationYears(Number(e.target.value))}
-          className="border border-gray-300 rounded-md px-3 py-1.5 text-sm w-20"
-          title="Duration (years)"
-        />
-        <Button type="submit" isLoading={createMutation.isPending}>
-          Add Course
-        </Button>
-      </form>
+      {canManage && (
+        <form onSubmit={handleCreate} className="flex flex-wrap gap-2 mb-4 items-center">
+          <select
+            value={departmentId}
+            onChange={(e) => setDepartmentId(e.target.value)}
+            className="border border-gray-300 rounded-md px-3 py-1.5 text-sm"
+          >
+            <option value="">Select department</option>
+            {departments?.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
+            ))}
+          </select>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Course name"
+            className="border border-gray-300 rounded-md px-3 py-1.5 text-sm flex-1 max-w-xs"
+          />
+          <input
+            type="number"
+            min={1}
+            max={10}
+            value={durationYears}
+            onChange={(e) => setDurationYears(Number(e.target.value))}
+            className="border border-gray-300 rounded-md px-3 py-1.5 text-sm w-20"
+            title="Duration (years)"
+          />
+          <Button type="submit" isLoading={createMutation.isPending}>
+            Add Course
+          </Button>
+        </form>
+      )}
       {error && <div className="mb-4 text-sm text-red-700">{error}</div>}
-      {!departments?.length && (
+      {canManage && !departments?.length && (
         <div className="mb-4 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-2">
           Create a department first before adding courses.
         </div>
@@ -128,7 +133,7 @@ export function CoursesPage() {
         Show inactive courses
       </label>
 
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-gray-500 text-left">
             <tr>
@@ -157,13 +162,15 @@ export function CoursesPage() {
                   <StatusBadge isActive={course.is_active} />
                 </td>
                 <td className="px-4 py-2 text-right">
-                  <Button
-                    variant={course.is_active ? "secondary" : "primary"}
-                    onClick={() => statusMutation.mutate({ id: course.id, isActive: !course.is_active })}
-                    isLoading={statusMutation.isPending && statusMutation.variables?.id === course.id}
-                  >
-                    {course.is_active ? "Deactivate" : "Activate"}
-                  </Button>
+                  {canManage && (
+                    <Button
+                      variant={course.is_active ? "secondary" : "primary"}
+                      onClick={() => statusMutation.mutate({ id: course.id, isActive: !course.is_active })}
+                      isLoading={statusMutation.isPending && statusMutation.variables?.id === course.id}
+                    >
+                      {course.is_active ? "Deactivate" : "Activate"}
+                    </Button>
+                  )}
                 </td>
               </tr>
             ))}

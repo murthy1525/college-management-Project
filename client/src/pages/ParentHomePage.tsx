@@ -34,7 +34,7 @@ export function ParentHomePage() {
       )}
 
       {!isLoading && data?.length === 0 && (
-        <div className="bg-white border border-gray-200 rounded-lg p-6 text-sm text-gray-500">
+        <div className="bg-white border border-gray-100 shadow-sm rounded-xl p-6 text-sm text-gray-500">
           No children are linked to your account yet. Contact the school office if this looks wrong.
         </div>
       )}
@@ -44,7 +44,7 @@ export function ParentHomePage() {
           <Link
             key={child.id}
             to={`/students/${child.id}`}
-            className="bg-white border border-gray-200 rounded-lg p-5 hover:border-blue-400 hover:shadow-sm transition"
+            className="bg-white border border-gray-100 shadow-sm rounded-xl p-5 hover:border-blue-400 hover:shadow-sm transition"
           >
             <div className="flex items-start justify-between">
               <div>

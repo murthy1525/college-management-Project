@@ -70,8 +70,8 @@ async function main() {
       type: argon2.argon2id,
     });
     const { rows: userRows } = await pool.query(
-      `INSERT INTO users (public_id, email, password_hash, status)
-       VALUES ($1, $2, $3, 'active') RETURNING id`,
+      `INSERT INTO users (public_id, email, full_name, password_hash, status)
+       VALUES ($1, $2, 'System Administrator', $3, 'active') RETURNING id`,
       ["ADM0001", env.seedAdminEmail, passwordHash]
     );
     const userId = userRows[0].id;

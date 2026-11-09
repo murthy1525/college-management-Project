@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { ApiError } from "../../middleware/error.middleware";
 import * as studentsService from "./students.service";
+import * as attendanceService from "../attendance/attendance.service";
 import {
   createLoginSchema,
   createStudentSchema,
@@ -37,6 +38,16 @@ export async function create(req: Request, res: Response) {
 
 export async function getOne(req: Request, res: Response) {
   const data = await studentsService.getStudentProfile(req.user!, req.params.studentId);
+  res.json({ success: true, data });
+}
+
+export async function getAttendance(req: Request, res: Response) {
+  const data = await attendanceService.getStudentAttendance(
+    req.user!,
+    req.params.studentId,
+    req.query.from as string | undefined,
+    req.query.to as string | undefined
+  );
   res.json({ success: true, data });
 }
 

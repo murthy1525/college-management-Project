@@ -3,7 +3,7 @@ import { AuthUserRow } from "./auth.types";
 
 export async function findByEmailWithRoles(db: Queryable, email: string): Promise<AuthUserRow | null> {
   const { rows } = await db.query(
-    `SELECT u.id, u.public_id, u.email, u.password_hash, u.status,
+    `SELECT u.id, u.public_id, u.email, u.full_name, u.password_hash, u.status,
             u.failed_login_count, u.locked_until,
             COALESCE(array_agg(r.code) FILTER (WHERE r.code IS NOT NULL), '{}') AS roles
      FROM users u

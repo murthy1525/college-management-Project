@@ -8,6 +8,8 @@ import { coursesRouter } from "./modules/courses/courses.routes";
 import { studentsRouter } from "./modules/students/students.routes";
 import { dashboardRouter } from "./modules/dashboard/dashboard.routes";
 import { meRouter } from "./modules/me/me.routes";
+import { staffRouter } from "./modules/staff/staff.routes";
+import { attendanceRouter } from "./modules/attendance/attendance.routes";
 import { errorHandler, notFoundHandler } from "./middleware/error.middleware";
 
 export const app = express();
@@ -24,6 +26,8 @@ app.use("/api/courses", coursesRouter);
 app.use("/api/students", studentsRouter);
 app.use("/api/dashboard", dashboardRouter);
 app.use("/api/me", meRouter);
+app.use("/api/staff", staffRouter);
+app.use("/api/attendance", attendanceRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

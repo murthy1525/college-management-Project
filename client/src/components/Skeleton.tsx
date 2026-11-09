@@ -20,7 +20,7 @@ export function TableSkeleton({ columns, rows = 5 }: { columns: number; rows?: n
 
 export function CardSkeleton() {
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-5 space-y-3">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-3">
       <Skeleton className="h-3 w-20" />
       <Skeleton className="h-7 w-16" />
       <Skeleton className="h-3 w-32" />

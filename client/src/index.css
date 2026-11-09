@@ -7,7 +7,18 @@
 body {
   margin: 0;
   font-family: system-ui, "Segoe UI", Roboto, sans-serif;
-  background: #f3f4f6;
+  background: #f5f6fb;
+}
+
+.app-shell-bg {
+  background:
+    radial-gradient(1200px 500px at -5% -10%, rgba(29, 78, 216, 0.07), transparent 60%),
+    radial-gradient(900px 500px at 105% 0%, rgba(225, 29, 72, 0.06), transparent 55%),
+    #f5f6fb;
+}
+
+.sidebar-gradient {
+  background: linear-gradient(165deg, #1e3a8a 0%, #1d4ed8 55%, #4338ca 100%);
 }
 
 @keyframes page-in {

@@ -10,7 +10,7 @@ const LOCKOUT_MINUTES = 15;
 
 export interface LoginResult {
   accessToken: string;
-  user: { id: number; publicId: string; email: string; roles: string[] };
+  user: { id: number; publicId: string; email: string; fullName: string | null; roles: string[] };
 }
 
 // Same generic error whether the email doesn't exist or the password is
@@ -55,11 +55,12 @@ export async function login(input: LoginInput): Promise<LoginResult> {
     userId: user.id,
     publicId: user.public_id,
     email: user.email,
+    fullName: user.full_name,
     roles: user.roles,
   });
 
   return {
     accessToken,
-    user: { id: user.id, publicId: user.public_id, email: user.email, roles: user.roles },
+    user: { id: user.id, publicId: user.public_id, email: user.email, fullName: user.full_name, roles: user.roles },
   };
 }

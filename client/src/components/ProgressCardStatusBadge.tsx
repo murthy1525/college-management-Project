@@ -7,7 +7,7 @@ export function ProgressCardStatusBadge({ status }: { status: "awaiting_signatur
     );
   }
   return (
-    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-700">
+    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
       Awaiting Signatures
     </span>
   );

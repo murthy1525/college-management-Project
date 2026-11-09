@@ -47,7 +47,7 @@ test("full golden path: login, create department/course/student, upload+view a d
   await page.getByLabel("Password").fill(ADMIN_PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page).toHaveURL("/");
-  await expect(page.getByText(ADMIN_EMAIL)).toBeVisible();
+  await expect(page.getByText("System Administrator")).toBeVisible();
 
   // --- Dashboard shows real (non-hardcoded) counts ---
   await expect(page.getByText("Students").first()).toBeVisible();

@@ -5,6 +5,7 @@ export default defineConfig({
     environment: "node",
     globals: false,
     fileParallelism: false, // tests share one Postgres database; run sequentially
+    exclude: ["**/node_modules/**", "**/dist/**"],
     globalSetup: ["./src/tests/globalSetup.ts"],
     env: {
       NODE_ENV: "test",

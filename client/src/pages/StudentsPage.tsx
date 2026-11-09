@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, extractErrorMessage } from "../lib/api";
+import { useAuth } from "../auth/AuthContext";
 import { Button } from "../components/Button";
 import { StatusBadge } from "../components/StatusBadge";
 import { PageHeader } from "../components/PageHeader";
@@ -41,6 +42,8 @@ const emptyForm = {
 };
 
 export function StudentsPage() {
+  const { hasRole } = useAuth();
+  const canManageStudents = hasRole("admin", "hod");
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [includeInactive, setIncludeInactive] = useState(false);
@@ -114,14 +117,16 @@ export function StudentsPage() {
         title="Students"
         subtitle="Search, register, and manage student records."
         actions={
-          <Button variant={showForm ? "secondary" : "primary"} onClick={() => setShowForm((s) => !s)}>
-            {showForm ? "Cancel" : "Register Student"}
-          </Button>
+          canManageStudents && (
+            <Button variant={showForm ? "secondary" : "primary"} onClick={() => setShowForm((s) => !s)}>
+              {showForm ? "Cancel" : "Register Student"}
+            </Button>
+          )
         }
       />
 
       {showForm && (
-        <form onSubmit={handleCreate} className="bg-white border border-gray-200 rounded-lg p-4 mb-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <form onSubmit={handleCreate} className="bg-white border border-gray-100 shadow-sm rounded-xl p-4 mb-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
           <input
             placeholder="First name"
             required
@@ -218,7 +223,7 @@ export function StudentsPage() {
         </label>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-gray-500 text-left">
             <tr>
@@ -251,13 +256,15 @@ export function StudentsPage() {
                   <StatusBadge isActive={student.is_active} />
                 </td>
                 <td className="px-4 py-2 text-right">
-                  <Button
-                    variant={student.is_active ? "secondary" : "primary"}
-                    onClick={() => statusMutation.mutate({ id: student.id, isActive: !student.is_active })}
-                    isLoading={statusMutation.isPending && statusMutation.variables?.id === student.id}
-                  >
-                    {student.is_active ? "Deactivate" : "Activate"}
-                  </Button>
+                  {canManageStudents && (
+                    <Button
+                      variant={student.is_active ? "secondary" : "primary"}
+                      onClick={() => statusMutation.mutate({ id: student.id, isActive: !student.is_active })}
+                      isLoading={statusMutation.isPending && statusMutation.variables?.id === student.id}
+                    >
+                      {student.is_active ? "Deactivate" : "Activate"}
+                    </Button>
+                  )}
                 </td>
               </tr>
             ))}

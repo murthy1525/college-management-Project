@@ -38,8 +38,8 @@ export async function createGuardian(
       const passwordHash = await argon2.hash(input.password!, { type: argon2.argon2id });
 
       const { rows: userRows } = await client.query(
-        `INSERT INTO users (public_id, email, password_hash, status) VALUES ($1,$2,$3,'active') RETURNING id`,
-        [publicId, input.email, passwordHash]
+        `INSERT INTO users (public_id, email, full_name, password_hash, status) VALUES ($1,$2,$3,$4,'active') RETURNING id`,
+        [publicId, input.email, input.name, passwordHash]
       );
       parentUserId = userRows[0].id;
 
